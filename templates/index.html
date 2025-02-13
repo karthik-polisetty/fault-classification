@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fault Classifier</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+    <!-- Logo in the top right corner -->
+    <img src="/static/logo.png" alt="Company Logo" class="logo">
+
+    <div class="container">
+        <h1>Rotating Machine Fault Classifier</h1>
+
+        <!-- File Upload Section -->
+        <div class="upload-section">
+            <h3>Upload Vibration Data (CSV or NPY)</h3>
+            <form id="uploadForm">
+                <input type="file" id="fileInput" accept=".csv, .npy">
+                <button type="button" onclick="uploadFile()">Upload & Predict</button>
+            </form>
+        </div>
+
+        <!-- Prediction Result -->
+        <div class="result-section">
+            <h3>Prediction Result:</h3>
+            <p id="result"></p>
+        </div>
+
+        <!-- Interactive Plots -->
+        <div class="plots-section">
+            <h3>Vibration Data Plots</h3>
+            <div id="plot1"></div>
+            <div id="plot2"></div>
+            <div id="plot3"></div>
+            <div id="plot4"></div>
+        </div>
+    </div>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById("fileInput").files[0];
+            if (!fileInput) {
+                alert("Please select a file first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput);
+
+            try {
+                const response = await fetch("/predict-file/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error("Error in prediction request.");
+                }
+
+                const result = await response.json();
+
+                // Check if API returned an error
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Display prediction result
+                document.getElementById("result").innerHTML =
+                    `Predicted Class: <strong>${result.predicted_class}</strong> <br>
+                     Confidence: <strong>${(result.confidence * 100).toFixed(2)}%</strong>`;
+
+                // Render Plotly plots
+                const plotContainers = ["plot1", "plot2", "plot3", "plot4"];
+                result.plots.forEach((plotData, index) => {
+                    Plotly.newPlot(plotContainers[index], JSON.parse(plotData));
+                });
+
+            } catch (error) {
+                document.getElementById("result").innerHTML = `<span style="color:red;">${error.message}</span>`;
+            }
+        }
+    </script>
+
+</body>
+</html>

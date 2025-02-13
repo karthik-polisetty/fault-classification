@@ -1,0 +1,12 @@
+numpy
+pandas
+scikit-learn
+matplotlib
+jinja2
+python-multipart
+fastapi 
+uvicorn 
+numpy 
+pydantic
+plotly
+tensorflow
