@@ -1,78 +1,131 @@
-/* Background Image */
+/* styles.css */
+
+/* Reset & base */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
 body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 0;
-    padding: 0;
-    background: url('/static/background.jpg') no-repeat center center fixed;
-    background-size: cover;
-    color: white;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background-color: #121212;
+  color: #e0e0e0;
+  line-height: 1.5;
+  overflow: hidden;          /* no page scroll */
 }
 
-/* Logo Styling */
-.logo {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 120px;
-    height: auto;
+/* Layout grid: fixed to viewport height */
+main.grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: 100vh;
 }
 
-/* Centered container */
-.container {
-    width: 65%;
-    margin: auto;
-    padding: 40px;
-    background: rgba(0, 0, 0, 0.8); /* Make it darker for better contrast */
-    border-radius: 15px;
-    box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.2);
-    min-height: 450px; /* Increased height */
+/* Left panel */
+aside.left {
+  background: #1b1c1f;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
-/* File Upload Section */
-.upload-section {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 20px;
+.aiBox {
+  border: 1px solid #333;
+  padding: 0.8rem;
+  border-radius: 8px;
+  background: #222;
 }
 
-/* Upload Button */
-button {
-    padding: 12px 18px;
-    font-size: 16px;
-    border: none;
-    background: #00A6FB;
-    color: white;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: 0.3s;
+.aiRow { display: flex; align-items: flex-start; }
+.icn { margin-right: 0.6rem; }
+.icn .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #8ab4f8; }
+.icn.grey .dot { background: #aaa; }
+.icn.green .dot { background: #4caf50; }
+.icn .dot.red { background: #f44336; }
+
+.txt .title { font-weight: 600; margin-bottom: 2px; }
+.txt .sub { font-size: 0.85rem; opacity: 0.8; }
+.txt .dt { font-size: 0.8rem; opacity: 0.7; }
+
+.link { font-size: 0.8rem; color: #8ab4f8; text-decoration: none; }
+
+hr.sep { border: none; border-top: 1px solid #333; }
+
+/* Controls (bottom-left) */
+.controls { margin-top: auto; }   /* push to bottom */
+
+.switch { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.switch button {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: #2b2c30;
+  color: #e0e0e0;
+  cursor: pointer;
+}
+.switch button.active { background: #8ab4f8; color: #000; }
+
+/* Upload: hide input, show button */
+.upload input[type="file"] { display: none; }
+.upload { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; }
+
+/* Visible button for hidden file input */
+.btn {
+  display: inline-block;
+  padding: 0.5rem 0.8rem;
+  background: #2b2c30;
+  color: #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #3a3b40;
+  user-select: none;
+}
+.btn:hover { background: #34363b; }
+
+/* Right panel (no internal scroll) */
+section.right {
+  background: #18191c;
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  overflow: hidden;
 }
 
-button:hover {
-    background: #007bb5;
+.panel {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-/* Result Section */
-.result-section {
-    margin-top: 20px;
-    font-size: 22px;
-    font-weight: bold;
+.panel h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 0.2rem;
 }
 
-/* Plotly Plot Styling */
-.plots-section {
-    margin-top: 30px;
+.axisRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-div[id^="plot"] {
-    width: 90%;
-    height: 400px;
-    margin: 20px auto;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    padding: 10px;
+.axisRow .label { font-size: 0.85rem; opacity: 0.7; }
+
+.axisRow .axis {
+  background: #2b2c30;
+  border: none;
+  color: #e0e0e0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
 }
+.axisRow .axis.active { background: #8ab4f8; color: #000; }
 
-
-
+/* Prediction line under AI Analysis */
+.predLine { margin-top: 0.5rem; font-size: 0.9rem; color: #8ab4f8; }

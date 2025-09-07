@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MMS SatAIlite Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="grid">
+    <!-- LEFT COLUMN (exact look of your reference) -->
+    <aside class="left">
+
+      <!-- AI Analysis bordered box -->
+      <section class="aiBox">
+        <h2>AI Analysis</h2>
+
+        <!-- Top incident block -->
+        <div class="aiRow">
+          <div class="icn">
+            <span class="dot"></span>
+          </div>
+          <div class="txt">
+            <div class="title">Imbalance Detected!</div>
+            <div class="sub">Pump A-103 DE, TX Plant showing abnormal patterns</div>
+
+            <div class="dt">
+              <div id="currDate">Date: —</div>
+              <div id="currTime">Time: —</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Below rows (match reference styling) -->
+      <section class="rowLite">
+        <div class="icn grey"><span class="dot red"></span></div>
+        <div class="txt">
+          <div class="title">High Vibration Detected</div>
+          <div class="sub">Pump A-103 NDE, TX Plant showing abnormal amplitude</div>
+          <a class="link" href="#">Investigate →</a>
+        </div>
+      </section>
+
+      <hr class="sep"/>
+
+      <section class="rowPill">
+        <div class="icn grey"></div>
+        <div class="txt">
+          <div class="title">Maintenance reminder</div>
+          <div class="sub">Scheduled maintenance for Turbines in California Plant due in 3 days.</div>
+          <a class="link" href="#">Schedule →</a>
+        </div>
+      </section>
+
+      <hr class="sep"/>
+
+      <section class="rowPill">
+        <div class="icn green"></div>
+        <div class="txt">
+          <div class="title">Efficiency improvement</div>
+          <div class="sub">Motor B-205 efficiency improved by 12% after recent adjustments.</div>
+          <a class="link" href="#">View details →</a>
+        </div>
+      </section>
+
+      <!-- CONTROLS (bottom-left, under tabs/rows) -->
+      <section class="controls">
+        <div class="switch">
+          <button id="mode_individual" class="active">Individual</button>
+          <button id="mode_continuous">Continuous</button>
+        </div>
+
+        <div class="upload">
+          <input id="fileInput" type="file" accept=".csv,.tsv,.txt,.wav,.npy" />
+          <span id="fileName" class="muted">No file chosen</span>
+        </div>
+      </section>
+    </aside>
+
+    <!-- RIGHT COLUMN (two charts: time waveform top, FFT bottom) -->
+    <section class="right">
+      <div class="panel">
+        <h3>Time Waveform</h3>
+        <canvas id="timeCanvas" aria-label="Time waveform"></canvas>
+        <div class="axisRow">
+          <span class="label">Axis:</span>
+          <button class="axis x">X</button>
+          <button class="axis y">Y</button>
+          <button class="axis z">Z</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>FFT Plot</h3>
+        <canvas id="fftCanvas" aria-label="FFT"></canvas>
+        <div class="axisRow">
+          <span class="label">Axis:</span>
+          <button class="axis x">X</button>
+          <button class="axis y">Y</button>
+          <button class="axis z">Z</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Current date/time (plain text like reference)
+    function updateDT(){
+      const now = new Date();
+      document.getElementById('currDate').textContent =
+        "Date: " + now.toLocaleDateString(undefined, {year:"numeric", month:"numeric", day:"numeric"});
+      document.getElementById('currTime').textContent =
+        "Time: " + now.toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit", hour12:true});
+    }
+    updateDT(); setInterval(updateDT, 60000);
+
+    // Upload filename preview
+    const fileInput = document.getElementById('fileInput');
+    const fileName  = document.getElementById('fileName');
+    fileInput.addEventListener('change', ()=>{
+      fileName.textContent = fileInput.files[0] ? fileInput.files[0].name : 'No file chosen';
+    });
+
+    // Mode toggle (visual only)
+    const ind = document.getElementById('mode_individual');
+    const con = document.getElementById('mode_continuous');
+    ind.onclick = ()=>{ ind.classList.add('active'); con.classList.remove('active'); };
+    con.onclick = ()=>{ con.classList.add('active'); ind.classList.remove('active'); };
+  </script>
+</body>
+</html>

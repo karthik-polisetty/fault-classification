@@ -1,0 +1,120 @@
+:root{
+  --bg:#0f1117; --panel:#1a1d29; --text:#e5e7eb; --muted:#9ca3af;
+  --line:#2d3240; --accent:#3b82f6; --warn:#f87171; --warnbg:#3f1e1e;
+  --pillbg:#1e2333; --pillborder:#2d3240;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font:15px/1.5 system-ui,Arial;
+  overflow:hidden;
+}
+
+/* ===== PAGE GRID ===== */
+.grid{
+  height:100vh;
+  max-width:1400px; margin:0 auto; padding:14px;
+  display:grid; grid-template-columns:1fr 1fr; gap:18px;
+}
+
+/* ===== LEFT COLUMN ===== */
+.left{
+  min-height:0; overflow:auto;
+  display:flex; flex-direction:column; gap:18px;
+}
+
+/* AI Analysis box */
+.aiBox{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:16px;
+}
+.aiBox h2{margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text)}
+
+.aiRow{display:flex; gap:14px; align-items:flex-start}
+.icn{
+  width:36px; height:48px; border-radius:8px;
+  background:#2d3240; border:1px solid #3f4455;
+  display:flex; align-items:center; justify-content:center;
+}
+.icn .dot{
+  width:10px; height:10px; border-radius:50%;
+  border:2px solid var(--warn); background:#fff;
+}
+.txt .title{font-weight:700; margin-bottom:2px; color:var(--text)}
+.txt .sub{color:var(--muted); margin-bottom:16px}
+.dt{display:flex; flex-direction:column; gap:6px; color:var(--muted)}
+
+/* “High Vibration Detected” row */
+.rowLite{
+  display:flex; gap:12px; align-items:flex-start;
+  background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px;
+}
+.rowLite .icn{width:36px; height:48px; background:#2d3240; border:1px solid #3f4455}
+.rowLite .dot.red{width:10px; height:10px; border-radius:50%; border:2px solid var(--warn); background:#fff}
+.rowLite .title{font-weight:700; color:var(--text)}
+.rowLite .sub{color:var(--muted)}
+.link{display:inline-block; margin-top:6px; color:var(--accent); font-weight:600; text-decoration:none}
+
+/* Divider */
+.sep{border:0; height:1px; background:var(--line);}
+
+/* “Maintenance” / “Efficiency” pill rows */
+.rowPill{
+  display:flex; gap:12px; align-items:flex-start;
+  background:var(--pillbg); border:1px solid var(--pillborder);
+  border-radius:8px; padding:10px 12px;
+  color:var(--text);
+}
+.rowPill .icn{width:28px; height:28px; border-radius:6px; background:#2d3240; border:1px solid var(--line)}
+.rowPill .icn.green{background:#063; border-color:#0a5; opacity:.6}
+.rowPill .title{font-weight:600; color:var(--text)}
+.rowPill .sub{color:var(--muted)}
+
+/* ===== CONTROLS (bottom-left) ===== */
+.controls{
+  margin-top:auto; padding-top:6px;
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+}
+.switch{
+  display:inline-flex; border:2px solid var(--line); border-radius:10px; overflow:hidden;
+}
+.switch button{
+  border:0; background:var(--panel); color:var(--text);
+  padding:6px 14px; cursor:pointer; font-weight:700; font-size:14px;
+}
+.switch .active{background:var(--accent); color:#fff}
+.upload{display:flex; gap:8px; align-items:center}
+.upload input[type="file"]{
+  padding:6px; border:1px dashed var(--muted); background:transparent; color:var(--text); border-radius:8px;
+}
+.muted{font-size:12px; color:var(--muted)}
+
+/* ===== RIGHT COLUMN ===== */
+.right{
+  min-height:0; overflow:hidden;
+  display:grid; grid-template-rows:1fr 1fr; gap:14px; height:100%;
+}
+.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px;
+  display:flex; flex-direction:column; min-height:0;
+}
+.panel h3{margin:0 0 8px; font-size:16px; text-align:center; color:var(--text)}
+canvas{
+  flex:1; min-height:0; width:100%;
+  background:#0b0d13; border:1px solid var(--line); border-radius:8px;
+}
+.axisRow{display:flex; align-items:center; gap:8px; margin-top:8px}
+.axisRow .label{color:var(--muted)}
+.axis{border:0; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer}
+.axis.x{background:#2563eb;color:#fff}
+.axis.y{background:#10b981;color:#fff}
+.axis.z{background:#111827;color:#fff}
+
+/* Responsive */
+@media (max-width:1100px){
+  .grid{grid-template-columns:1fr}
+}

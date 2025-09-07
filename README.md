@@ -55,3 +55,6 @@ or if running behind NGINX:
 http://<public_ip>/
 ```
 ```
+
+
+ssh -i "C:/Users/kpoli/OneDrive/Desktop/mms/fault-classification/data/aws/mms_fastapi.pem" ec2-user@3.144.94.85

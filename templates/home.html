@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MMS SatAIlite Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <style>
+    /* canvases sized to avoid page scroll */
+    canvas { width: 100%; height: 220px; background: #0f1115; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <main class="grid">
+    <!-- LEFT COLUMN -->
+    <aside class="left">
+      <section class="aiBox">
+        <h2>AI Analysis</h2>
+        <div class="aiRow">
+          <div class="icn"><span class="dot" id="statusDot"></span></div>
+          <div class="txt">
+            <div id="detectedTitle" class="title">Awaiting input…</div>
+            <div class="sub">Upload a file to analyze vibration patterns</div>
+            <div class="dt">
+              <div id="currDate">Date: —</div>
+              <div id="currTime">Time: —</div>
+            </div>
+            <div id="predOut" class="predLine"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rowLite">
+        <div class="icn grey"><span class="dot red"></span></div>
+        <div class="txt">
+          <div class="title">High Vibration Detected</div>
+          <div class="sub">Pump A-103 NDE, TX Plant showing abnormal amplitude</div>
+          <a class="link" href="#">Investigate →</a>
+        </div>
+      </section>
+
+      <hr class="sep"/>
+
+      <section class="rowPill">
+        <div class="icn grey"></div>
+        <div class="txt">
+          <div class="title">Maintenance reminder</div>
+          <div class="sub">Scheduled maintenance for Turbines in California Plant due in 3 days.</div>
+          <a class="link" href="#">Schedule →</a>
+        </div>
+      </section>
+
+      <hr class="sep"/>
+
+      <section class="rowPill">
+        <div class="icn green"></div>
+        <div class="txt">
+          <div class="title">Efficiency improvement</div>
+          <div class="sub">Motor B-205 efficiency improved by 12% after recent adjustments.</div>
+          <a class="link" href="#">View details →</a>
+        </div>
+      </section>
+
+      <!-- CONTROLS -->
+      <section class="controls">
+        <div class="switch">
+          <button id="mode_individual" class="active">Individual</button>
+          <button id="mode_continuous" disabled title="Coming soon">Continuous</button>
+        </div>
+
+        <div class="upload">
+          <!-- hidden input + visible label button -->
+          <input id="fileInput" type="file" accept=".csv,.npy" />
+          <label for="fileInput" class="btn">Upload & Predict</label>
+        </div>
+      </section>
+    </aside>
+
+    <!-- RIGHT COLUMN -->
+    <section class="right">
+      <div class="panel">
+        <h3>Time Waveform</h3>
+        <div class="axisRow">
+          <span class="label">Channel:</span>
+          <button class="axis" data-ch="0">IV</button>
+          <button class="axis" data-ch="1">IH</button>
+          <button class="axis" data-ch="2">OV</button>
+          <button class="axis" data-ch="3">OH</button>
+        </div>
+        <canvas id="timeCanvas" aria-label="Time waveform"></canvas>
+      </div>
+
+      <div class="panel">
+        <h3>FFT Plot</h3>
+        <div class="axisRow">
+          <span class="label">Channel:</span>
+          <button class="axis" data-ch="0">IV</button>
+          <button class="axis" data-ch="1">IH</button>
+          <button class="axis" data-ch="2">OV</button>
+          <button class="axis" data-ch="3">OH</button>
+        </div>
+        <canvas id="fftCanvas" aria-label="FFT"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ===== Class labels & detection text =====
+    const classLabels = { 0: "Normal", 1: "Imbalance", 2: "Misalignment", 3: "Bearing" };
+    const detectionText = {
+      0: "Normal condition detected",
+      1: "Imbalance detected",
+      2: "Misalignment detected",
+      3: "Bearing fault detected"
+    };
+
+    // ===== Date/Time =====
+    function updateDT(){
+      const now = new Date();
+      document.getElementById('currDate').textContent =
+        "Date: " + now.toLocaleDateString(undefined, {year:"numeric", month:"numeric", day:"numeric"});
+      document.getElementById('currTime').textContent =
+        "Time: " + now.toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit", hour12:true});
+    }
+    updateDT(); setInterval(updateDT, 60000);
+
+    // ===== UI state =====
+    const fileInput = document.getElementById('fileInput');
+    const predOut   = document.getElementById('predOut');
+    const detectedTitle = document.getElementById('detectedTitle');
+    const statusDot = document.getElementById('statusDot');
+
+    const channelNames = ["IV","IH","OV","OH"];
+    let selectedChannel = 0;
+
+    function setActiveChannel(idx){
+      selectedChannel = idx;
+      document.querySelectorAll('.axisRow .axis').forEach(btn=>{
+        btn.classList.toggle('active', Number(btn.dataset.ch) === selectedChannel);
+      });
+      if (fileInput.files[0]) uploadAndPredict(); // re-draw on tab switch
+    }
+    document.querySelectorAll('.axisRow .axis').forEach(btn=>{
+      btn.addEventListener('click', ()=> setActiveChannel(Number(btn.dataset.ch)));
+    });
+    setActiveChannel(0);
+
+    // choose file -> auto predict
+    fileInput.addEventListener('change', ()=>{
+      if (fileInput.files[0]) uploadAndPredict();
+    });
+
+    // ===== Drawing (canvas) =====
+    function drawLineSeries(canvas, xArr, yArr, yLabel=""){
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width  = canvas.clientWidth;
+      const h = canvas.height = canvas.clientHeight;
+
+      ctx.clearRect(0,0,w,h);
+      ctx.lineWidth = 1.5;
+
+      const xMin = xArr[0], xMax = xArr[xArr.length-1];
+      let yMin = Infinity, yMax = -Infinity;
+      for (let y of yArr){ if (y < yMin) yMin = y; if (y > yMax) yMax = y; }
+      if (yMin === yMax) { yMin -= 1; yMax += 1; }
+
+      const padL = 40, padR = 12, padT = 12, padB = 20;
+      const plotW = w - padL - padR, plotH = h - padT - padB;
+
+      const xScale = v => padL + ((v - xMin) / (xMax - xMin)) * plotW;
+      const yScale = v => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+      // axes
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.beginPath();
+      ctx.moveTo(padL, padT); ctx.lineTo(padL, padT+plotH);
+      ctx.lineTo(padL+plotW, padT+plotH); ctx.stroke();
+
+      // series
+      ctx.strokeStyle = "#8ab4f8";
+      ctx.beginPath();
+      ctx.moveTo(xScale(xArr[0]), yScale(yArr[0]));
+      for (let i=1; i<xArr.length; i++){
+        ctx.lineTo(xScale(xArr[i]), yScale(yArr[i]));
+      }
+      ctx.stroke();
+
+      if (yLabel){
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.font = "12px sans-serif";
+        ctx.fillText(yLabel, padL, padT + 12);
+      }
+    }
+
+    // ===== API call =====
+    async function uploadAndPredict(){
+      const f = fileInput.files[0];
+      if (!f) { alert("Please select a file first!"); return; }
+
+      const form = new FormData();
+      form.append("file", f);
+      form.append("channel", String(selectedChannel));
+
+      predOut.textContent = "Running prediction…";
+
+      try {
+        const res = await fetch("/predict-individual/", { method: "POST", body: form });
+        if (!res.ok) throw new Error((await res.json()).detail || "Prediction failed.");
+        const data = await res.json();
+
+        const confPct = (data.confidence * 100).toFixed(2);
+        const fftNote = data.fft_error
+          ? ` · FFT: ${data.fft_error}`
+          : `   `;
+
+        detectedTitle.textContent = detectionText[data.predicted_class] || "Result detected";
+        statusDot.style.background = (data.predicted_class === 0) ? "#4caf50" : "#8ab4f8";
+        predOut.textContent =
+          `Predicted Class: ${classLabels[data.predicted_class]}   Confidence: ${confPct}%${fftNote}`;
+
+        // Time waveform
+        drawLineSeries(
+          document.getElementById("timeCanvas"),
+          data.time_series,
+          data.signal,
+          `${channelNames[selectedChannel]} Amplitude`
+        );
+
+        // FFT (only if present)
+        if (data.fft_magnitude && data.fft_magnitude.length > 0) {
+          drawLineSeries(
+            document.getElementById("fftCanvas"),
+            data.fft_freqs,
+            data.fft_magnitude,
+            `${channelNames[selectedChannel]} FFT Magnitude (file)`
+          );
+        }
+      } catch (e){
+        predOut.textContent = `Error: ${e.message}`;
+      }
+    }
+
+    // mode button visuals
+    const ind = document.getElementById('mode_individual');
+    const con = document.getElementById('mode_continuous');
+    ind.onclick = ()=>{ ind.classList.add('active'); con.classList.remove('active'); };
+  </script>
+</body>
+</html>
