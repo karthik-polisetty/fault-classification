@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 trial_data.ipynb
-/label_samples/
+**/label_samples/
 # Prevent aws folder from going into git
 aws/
 
