@@ -20,12 +20,11 @@
           <div class="icn"><span class="dot" id="statusDot"></span></div>
           <div class="txt">
             <div id="detectedTitle" class="title">Awaiting input…</div>
-            <div class="sub">Upload a file to analyze vibration patterns</div>
+            <div class="sub">Upload a file or run continuous to analyze vibration patterns</div>
             <div class="dt">
               <div id="currDate">Date: —</div>
               <div id="currTime">Time: —</div>
             </div>
-            <div id="predOut" class="predLine"></div>
           </div>
         </div>
       </section>
@@ -65,13 +64,17 @@
       <section class="controls">
         <div class="switch">
           <button id="mode_individual" class="active">Individual</button>
-          <button id="mode_continuous" disabled title="Coming soon">Continuous</button>
+          <button id="mode_continuous">Continuous</button>
         </div>
 
-        <div class="upload">
-          <!-- hidden input + visible label button -->
+        <div class="upload" id="uploadRow">
           <input id="fileInput" type="file" accept=".csv,.npy" />
           <label for="fileInput" class="btn">Upload & Predict</label>
+        </div>
+
+        <div class="upload" id="continuousRow" style="display:none;">
+          <button id="startRun" class="btn">Start</button>
+          <button id="stopRun" class="btn">Stop</button>
         </div>
       </section>
     </aside>
@@ -91,7 +94,7 @@
       </div>
 
       <div class="panel">
-        <h3>FFT Plot</h3>
+        <h3>FFT Plot (from file)</h3>
         <div class="axisRow">
           <span class="label">Channel:</span>
           <button class="axis" data-ch="0">IV</button>
@@ -105,7 +108,7 @@
   </main>
 
   <script>
-    // ===== Class labels & detection text =====
+    // ===== Labels =====
     const classLabels = { 0: "Normal", 1: "Imbalance", 2: "Misalignment", 3: "Bearing" };
     const detectionText = {
       0: "Normal condition detected",
@@ -113,6 +116,7 @@
       2: "Misalignment detected",
       3: "Bearing fault detected"
     };
+    const channelNames = ["IV","IH","OV","OH"];
 
     // ===== Date/Time =====
     function updateDT(){
@@ -124,33 +128,37 @@
     }
     updateDT(); setInterval(updateDT, 60000);
 
-    // ===== UI state =====
-    const fileInput = document.getElementById('fileInput');
-    const predOut   = document.getElementById('predOut');
-    const detectedTitle = document.getElementById('detectedTitle');
+    // ===== Elements & State =====
     const statusDot = document.getElementById('statusDot');
+    const detectedTitle = document.getElementById('detectedTitle');
 
-    const channelNames = ["IV","IH","OV","OH"];
+    const fileInput = document.getElementById('fileInput');
+    const modeIndividualBtn = document.getElementById('mode_individual');
+    const modeContinuousBtn = document.getElementById('mode_continuous');
+    const uploadRow = document.getElementById('uploadRow');
+    const continuousRow = document.getElementById('continuousRow');
+    const startBtn = document.getElementById('startRun');
+    const stopBtn = document.getElementById('stopRun');
+
     let selectedChannel = 0;
+    let mode = "individual";
+    let ticker = null;
+    let samples = [];
+    let lastIdx = -1; // remember last random pick to avoid immediate repeat
 
-    function setActiveChannel(idx){
-      selectedChannel = idx;
+    function setActiveChannel(ch){
+      selectedChannel = ch;
       document.querySelectorAll('.axisRow .axis').forEach(btn=>{
         btn.classList.toggle('active', Number(btn.dataset.ch) === selectedChannel);
       });
-      if (fileInput.files[0]) uploadAndPredict(); // re-draw on tab switch
+      if (mode === "individual" && fileInput.files[0]) uploadAndPredict();
     }
     document.querySelectorAll('.axisRow .axis').forEach(btn=>{
       btn.addEventListener('click', ()=> setActiveChannel(Number(btn.dataset.ch)));
     });
     setActiveChannel(0);
 
-    // choose file -> auto predict
-    fileInput.addEventListener('change', ()=>{
-      if (fileInput.files[0]) uploadAndPredict();
-    });
-
-    // ===== Drawing (canvas) =====
+    // ===== Drawing =====
     function drawLineSeries(canvas, xArr, yArr, yLabel=""){
       const ctx = canvas.getContext('2d');
       const w = canvas.width  = canvas.clientWidth;
@@ -170,13 +178,11 @@
       const xScale = v => padL + ((v - xMin) / (xMax - xMin)) * plotW;
       const yScale = v => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
 
-      // axes
       ctx.strokeStyle = "rgba(255,255,255,0.2)";
       ctx.beginPath();
       ctx.moveTo(padL, padT); ctx.lineTo(padL, padT+plotH);
       ctx.lineTo(padL+plotW, padT+plotH); ctx.stroke();
 
-      // series
       ctx.strokeStyle = "#8ab4f8";
       ctx.beginPath();
       ctx.moveTo(xScale(xArr[0]), yScale(yArr[0]));
@@ -192,58 +198,125 @@
       }
     }
 
-    // ===== API call =====
+    // ===== Individual Mode =====
+    fileInput.addEventListener('change', ()=>{
+      if (fileInput.files[0]) uploadAndPredict();
+    });
+
     async function uploadAndPredict(){
       const f = fileInput.files[0];
-      if (!f) { alert("Please select a file first!"); return; }
-
+      if (!f) { return; }
       const form = new FormData();
       form.append("file", f);
       form.append("channel", String(selectedChannel));
-
-      predOut.textContent = "Running prediction…";
 
       try {
         const res = await fetch("/predict-individual/", { method: "POST", body: form });
         if (!res.ok) throw new Error((await res.json()).detail || "Prediction failed.");
         const data = await res.json();
-
-        const confPct = (data.confidence * 100).toFixed(2);
-        const fftNote = data.fft_error
-          ? ` · FFT: ${data.fft_error}`
-          : `   `;
-
-        detectedTitle.textContent = detectionText[data.predicted_class] || "Result detected";
-        statusDot.style.background = (data.predicted_class === 0) ? "#4caf50" : "#8ab4f8";
-        predOut.textContent =
-          `Predicted Class: ${classLabels[data.predicted_class]}   Confidence: ${confPct}%${fftNote}`;
-
-        // Time waveform
-        drawLineSeries(
-          document.getElementById("timeCanvas"),
-          data.time_series,
-          data.signal,
-          `${channelNames[selectedChannel]} Amplitude`
-        );
-
-        // FFT (only if present)
-        if (data.fft_magnitude && data.fft_magnitude.length > 0) {
-          drawLineSeries(
-            document.getElementById("fftCanvas"),
-            data.fft_freqs,
-            data.fft_magnitude,
-            `${channelNames[selectedChannel]} FFT Magnitude (file)`
-          );
-        }
-      } catch (e){
-        predOut.textContent = `Error: ${e.message}`;
+        renderDetection(data);
+      } catch (e) {
+        renderError(e.message);
       }
     }
 
-    // mode button visuals
-    const ind = document.getElementById('mode_individual');
-    const con = document.getElementById('mode_continuous');
-    ind.onclick = ()=>{ ind.classList.add('active'); con.classList.remove('active'); };
+    // ===== Continuous Mode =====
+    modeIndividualBtn.onclick = () => {
+      mode = "individual";
+      modeIndividualBtn.classList.add('active');
+      modeContinuousBtn.classList.remove('active');
+      uploadRow.style.display = "";
+      continuousRow.style.display = "none";
+      stopLoop();
+    };
+
+    modeContinuousBtn.onclick = async () => {
+      mode = "continuous";
+      modeContinuousBtn.classList.add('active');
+      modeIndividualBtn.classList.remove('active');
+      uploadRow.style.display = "none";
+      continuousRow.style.display = "";
+      stopLoop();
+      await loadSamples();
+    };
+
+    startBtn.onclick = startLoop;
+    stopBtn.onclick  = stopLoop;
+
+    async function loadSamples(){
+      try {
+        const r = await fetch("/samples");
+        const j = await r.json();
+        samples = (j.samples || []).map(s => s.filename);
+        if (!samples.length) renderError("No sample files found in static/samples/");
+      } catch (e) {
+        renderError("Unable to load samples");
+      }
+    }
+
+    function startLoop(){
+      if (!samples.length) { renderError("No sample files to run"); return; }
+      if (ticker) return;
+      tick();                         // run immediately
+      ticker = setInterval(tick, 1500); // then repeat
+    }
+    function stopLoop(){
+      if (ticker) { clearInterval(ticker); ticker = null; }
+    }
+
+    function randIndex(){
+      if (!samples.length) return -1;
+      if (samples.length === 1) return 0;
+      let i;
+      do { i = Math.floor(Math.random() * samples.length); } while (i === lastIdx);
+      return i;
+    }
+
+    async function tick(){
+      if (!samples.length) return;
+      const i = randIndex();
+      if (i < 0) return;
+      const filename = samples[i];
+      lastIdx = i;
+      try {
+        const url = `/predict-sample?filename=${encodeURIComponent(filename)}&channel=${selectedChannel}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error((await res.json()).detail || "Prediction failed.");
+        const data = await res.json();
+        renderDetection(data);
+      } catch (e) {
+        renderError(e.message);
+      }
+    }
+
+    // ===== Render helpers =====
+    function renderDetection(data){
+      detectedTitle.textContent = detectionText[data.predicted_class] || "Result detected";
+      statusDot.style.background = (data.predicted_class === 0) ? "#4caf50" : "#8ab4f8";
+
+      // Time waveform
+      drawLineSeries(
+        document.getElementById("timeCanvas"),
+        data.time_series,
+        data.signal,
+        `${channelNames[selectedChannel]} Amplitude`
+      );
+
+      // FFT (if present)
+      if (data.fft_magnitude && data.fft_magnitude.length > 0) {
+        drawLineSeries(
+          document.getElementById("fftCanvas"),
+          data.fft_freqs,
+          data.fft_magnitude,
+          `${channelNames[selectedChannel]} FFT Magnitude (file)`
+        );
+      }
+    }
+
+    function renderError(msg){
+      detectedTitle.textContent = msg;
+      statusDot.style.background = "#f44336";
+    }
   </script>
 </body>
 </html>

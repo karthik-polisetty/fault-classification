@@ -12,7 +12,7 @@ body {
   overflow: hidden;          /* no page scroll */
 }
 
-/* Layout grid: fixed to viewport height */
+/* Layout grid */
 main.grid {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -38,9 +38,6 @@ aside.left {
 .aiRow { display: flex; align-items: flex-start; }
 .icn { margin-right: 0.6rem; }
 .icn .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #8ab4f8; }
-.icn.grey .dot { background: #aaa; }
-.icn.green .dot { background: #4caf50; }
-.icn .dot.red { background: #f44336; }
 
 .txt .title { font-weight: 600; margin-bottom: 2px; }
 .txt .sub { font-size: 0.85rem; opacity: 0.8; }
@@ -50,9 +47,8 @@ aside.left {
 
 hr.sep { border: none; border-top: 1px solid #333; }
 
-/* Controls (bottom-left) */
-.controls { margin-top: auto; }   /* push to bottom */
-
+/* Controls */
+.controls { margin-top: auto; }
 .switch { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
 .switch button {
   flex: 1;
@@ -65,11 +61,9 @@ hr.sep { border: none; border-top: 1px solid #333; }
 }
 .switch button.active { background: #8ab4f8; color: #000; }
 
-/* Upload: hide input, show button */
 .upload input[type="file"] { display: none; }
 .upload { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; }
 
-/* Visible button for hidden file input */
 .btn {
   display: inline-block;
   padding: 0.5rem 0.8rem;
@@ -82,7 +76,7 @@ hr.sep { border: none; border-top: 1px solid #333; }
 }
 .btn:hover { background: #34363b; }
 
-/* Right panel (no internal scroll) */
+/* Right panel */
 section.right {
   background: #18191c;
   padding: 0.8rem;
@@ -102,21 +96,10 @@ section.right {
   gap: 0.6rem;
 }
 
-.panel h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #e0e0e0;
-  margin-bottom: 0.2rem;
-}
+.panel h3 { font-size: 1rem; font-weight: 600; color: #e0e0e0; margin-bottom: 0.2rem; }
 
-.axisRow {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
+.axisRow { display: flex; align-items: center; gap: 0.4rem; }
 .axisRow .label { font-size: 0.85rem; opacity: 0.7; }
-
 .axisRow .axis {
   background: #2b2c30;
   border: none;
@@ -126,6 +109,3 @@ section.right {
   cursor: pointer;
 }
 .axisRow .axis.active { background: #8ab4f8; color: #000; }
-
-/* Prediction line under AI Analysis */
-.predLine { margin-top: 0.5rem; font-size: 0.9rem; color: #8ab4f8; }
