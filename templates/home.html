@@ -14,6 +14,11 @@
   <main class="grid">
     <!-- LEFT COLUMN -->
     <aside class="left">
+      <!-- Company logo -->
+      <div class="brand">
+        <img src="/static/img/company_logo.png" alt="Company" class="logo">
+      </div>
+
       <section class="aiBox">
         <h2>AI Analysis</h2>
         <div class="aiRow">
@@ -81,6 +86,11 @@
 
     <!-- RIGHT COLUMN -->
     <section class="right">
+      <!-- Project logo pinned to top-right -->
+      <div class="project-logo">
+        <img src="/static/img/project_logo.png" alt="Project" class="logoSmall">
+      </div>
+
       <div class="panel">
         <h3>Time Waveform</h3>
         <div class="axisRow">
@@ -144,7 +154,7 @@
     let mode = "individual";
     let ticker = null;
     let samples = [];
-    let lastIdx = -1; // remember last random pick to avoid immediate repeat
+    let lastIdx = -1; // avoid immediate repeat
 
     function setActiveChannel(ch){
       selectedChannel = ch;
