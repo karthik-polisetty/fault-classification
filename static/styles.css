@@ -12,11 +12,12 @@ body {
   overflow: hidden;          /* no page scroll */
 }
 
-/* Layout grid */
+/* Layout grid: full-width, fixed columns */
 main.grid {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 340px 1fr;  /* fixed sidebar + flexible content */
   height: 100vh;
+  width: 100vw;                      /* fill screen width */
 }
 
 /* Left panel */
@@ -28,6 +29,16 @@ aside.left {
   gap: 0.8rem;
 }
 
+/* Logos */
+.brand { display: flex; align-items: center; justify-content: center; padding-bottom: 0.3rem; }
+.logo  { max-width: 180px; max-height: 42px; object-fit: contain; filter: drop-shadow(0 0 1px rgba(0,0,0,0.6)); }
+.logoSmall { max-width: 160px; max-height: 36px; object-fit: contain; opacity: 0.9; }
+
+/* Project logo pinned to top-right of right column */
+.project-logo { position: absolute; top: 10px; right: 12px; pointer-events: none; }
+section.right { position: relative; }
+
+/* Cards & text */
 .aiBox {
   border: 1px solid #333;
   padding: 0.8rem;
@@ -38,6 +49,9 @@ aside.left {
 .aiRow { display: flex; align-items: flex-start; }
 .icn { margin-right: 0.6rem; }
 .icn .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #8ab4f8; }
+.icn.grey .dot { background: #aaa; }
+.icn.green .dot { background: #4caf50; }
+.icn .dot.red { background: #f44336; }
 
 .txt .title { font-weight: 600; margin-bottom: 2px; }
 .txt .sub { font-size: 0.85rem; opacity: 0.8; }
@@ -76,14 +90,14 @@ hr.sep { border: none; border-top: 1px solid #333; }
 }
 .btn:hover { background: #34363b; }
 
-/* Right panel */
+/* Right column: flexible width, fixed-height charts */
 section.right {
   background: #18191c;
   padding: 0.8rem;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  overflow: hidden;
+  overflow: hidden;          /* keep panels tidy */
 }
 
 .panel {
